@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# SPDX-License-Identifier: MIT
+# SPDX-FileCopyrightText: Copyright 2026 Tobias GÖrgens
+
+/usr/sbin/transactional-update -c -n run zypper -n aloc ${1}
+/usr/sbin/transactional-update apply
+/usr/bin/localectl set-locale LANG=${1}

@@ -1,0 +1,93 @@
+# Skip if not requested
+if [[ -z "${need_locale:-}" ]]; then
+  log "No locale requested; skipping locale install"
+  exit 0
+fi
+
+apply_kde_user_locale() {
+  local loc="$1"
+  local plasma_rc="${HOME}/.config/plasma-localerc"
+
+  mkdir -p "${HOME}/.config"
+
+  # Ensure file exists
+  touch "${plasma_rc}"
+
+  # Update/insert LANG
+  if grep -q '^LANG=' "${plasma_rc}"; then
+    sed -i "s|^LANG=.*|LANG=${loc}|" "${plasma_rc}"
+  else
+    printf '\nLANG=%s\n' "${loc}" >> "${plasma_rc}"
+  fi
+
+  # Update/insert LANGUAGE
+  local lang_no_codeset="${loc%.*}"   # e.g. de_DE.UTF-8 -> de_DE
+  if grep -q '^LANGUAGE=' "${plasma_rc}"; then
+    sed -i "s|^LANGUAGE=.*|LANGUAGE=${lang_no_codeset}|" "${plasma_rc}"
+  else
+    printf 'LANGUAGE=%s\n' "${lang_no_codeset}" >> "${plasma_rc}"
+  fi
+
+  log "Updated KDE plasma-localerc (LANG=${loc}, LANGUAGE=${lang_no_codeset})"
+}
+
+apply_kde_keyboard_layout_from_locale() {
+  local loc="$1"
+  local kxkb="${HOME}/.config/kxkbrc"
+
+  # Locale like de_DE.UTF-8 -> take "de" as a decent default layout
+  local lang="${loc%%_*}"   # de_DE.UTF-8 -> de
+  [[ -n "${lang}" ]] || return 0
+
+  cat > "${kxkb}" <<EOF
+[Layout]
+LayoutList=${lang}
+Use=true
+EOF
+
+  log "Wrote KDE kxkbrc keyboard layout: ${lang}"
+}
+
+install_locale_system() {
+  log "Installing locale (system): '${need_locale}'"
+
+  if ! pkexec /usr/libexec/firstboot/firstboot-set-language "${need_locale}"; then
+    die "Installing Locales Failed"
+  fi
+
+  /usr/bin/xdg-user-dirs-update --force || true
+  log "Locale install done"
+}
+
+waitforNet
+
+(
+  echo "# Installing language support for ${need_locale}…"
+
+  # Install system locale
+  install_locale_system
+
+  # Apply DE-specific per-user settings
+  compositor="$(detect_wayland_compositor || echo unknown)"
+  case "${compositor}" in
+    kwin)
+      echo "# Applying KDE Plasma language settings…"
+      apply_kde_user_locale "${need_locale}"
+      apply_kde_keyboard_layout_from_locale "${need_locale}"
+      ;;
+    mutter)
+      # GNOME generally follows system/user locale; nothing extra needed here
+      log "GNOME/mutter detected; no extra per-user locale files applied"
+      ;;
+    *)
+      log "Unknown compositor; skipping DE-specific locale tweaks"
+      ;;
+  esac
+
+  echo "# Done"
+) | zenity --progress \
+    --title="Language Setup" \
+    --width=420 \
+    --pulsate \
+    --no-cancel \
+    --auto-close

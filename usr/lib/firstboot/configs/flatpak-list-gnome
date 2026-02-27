@@ -1,0 +1,19 @@
+true	org.mozilla.firefox	Mozilla Firefox	Default Web Browser
+true	org.gnome.Calculator	Calculator	Basic Calculator
+true	org.gnome.TextEditor	Text Editor	Basic Text Editor
+false	com.mattjakeman.ExtensionManager	Extension Manager	Shell Extensions Manager
+false	com.github.tchx84.Flatseal	Flatseal	Application Permissions Manager
+false	com.valvesoftware.Steam	Steam	Steam Games Launcher
+false	org.gnome.Loupe	Image Viewer	Basic Image Viewer
+false	org.gnome.gThumb	gThumb	Advanced Image Viewer
+false	io.github.celluloid_player.Celluloid	Celluloid	Basic Video Player
+false	org.videolan.VLC	VLC	Advanced Video Player
+false	org.mozilla.Thunderbird	Thunderbird	Mail Client
+false	org.telegram.desktop	Telegram Desktop	Telegram Messaging Client
+false	org.libreoffice.LibreOffice	LibreOffice	Office Suite
+false	org.gimp.GIMP	GIMP	Image Editor
+false	org.gnome.Builder	Builder	Graphical IDE
+false	io.github.dvlv.boxbuddyrs	BoxBuddy	Distrobox Container Manager
+false	org.gnome.Boxes	Boxes	Virtualisation
+false	org.gnome.World.PikaBackup	Pika Backup	Basic Backup Tool
+false	org.gnome.SimpleScan	Document Scanner	Basic Document Scanner

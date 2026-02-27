@@ -1,0 +1,5 @@
+OS_NAME="$(get_os_name)"
+
+zenity --info --icon=distributor-logo --no-wrap --title "Welcome to ${OS_NAME}" \
+  --text 'Congratulations!\n\nYour system is ready to be used\n\nWe hope you enjoy using <b>${OS_NAME}</b>' \
+  --width 300 --height 300

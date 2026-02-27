@@ -1,0 +1,140 @@
+#!/usr/bin/bash
+set -Eeuo pipefail
+
+FIRSTBOOT_LIB_DIR="/usr/lib/firstboot"
+FIRSTBOOT_ETC_DIR="/etc/firstboot"
+
+FIRSTBOOT_MODULES_LIB="${FIRSTBOOT_LIB_DIR}/modules"
+FIRSTBOOT_MODULES_ETC="${FIRSTBOOT_ETC_DIR}/modules"
+
+FIRSTBOOT_STATE_DIR="${HOME}/.local/share/firstboot"
+FIRSTBOOT_LOG_FILE="${FIRSTBOOT_STATE_DIR}/firstboot.log"
+FIRSTBOOT_MIGRATED_MARKER="${HOME}/.local/share/firstboot/.migrated"
+
+FIRSTBOOT_MIGRATED=0
+
+FIRSTBOOT_TOTAL_MODULES=0
+FIRSTBOOT_CURRENT_MODULE_INDEX=0
+FIRSTBOOT_CURRENT_MODULE_NAME="firstboot"
+
+mkdir -p "${FIRSTBOOT_STATE_DIR}"
+
+log() {
+  local ts
+  ts="$(date --iso-8601=seconds 2>/dev/null || date)"
+  printf '%s [%s] %s\n' "${ts}" "${FIRSTBOOT_CURRENT_MODULE_NAME}" "$*" >> "${FIRSTBOOT_LOG_FILE}"
+}
+
+die() {
+  log "ERROR: $*"
+  zenity --error --no-wrap --text="$*"
+  exit 1
+}
+
+d() {
+  zenity "$@"
+}
+
+waitforNet() {
+  until /usr/bin/curl -s --max-time 5 1.1.1.1 > /dev/null; do
+    sleep 1
+  done
+}
+
+get_os_name() {
+  local f name=""
+  for f in /etc/os-release /usr/lib/os-release; do
+    [[ -r "$f" ]] || continue
+    # shellcheck disable=SC1090
+    . "$f"
+    name="${NAME:-}"
+    [[ -n "$name" ]] && break
+  done
+  echo "${name:-your system}"
+}
+
+module_dir_for_phase() {
+  local phase="$1"
+  local etc_dir="${FIRSTBOOT_MODULES_ETC}/${phase}"
+  local lib_dir="${FIRSTBOOT_MODULES_LIB}/${phase}"
+
+  if [[ -d "${etc_dir}" ]] && compgen -G "${etc_dir}/*" > /dev/null; then
+    if find "${etc_dir}" -maxdepth 1 -type f -print -quit | grep -q .; then
+      echo "${etc_dir}"
+      return 0
+    fi
+  fi
+
+  echo "${lib_dir}"
+}
+
+count_modules_in_dir() {
+  local dir="$1"
+  [[ -d "${dir}" ]] || { echo 0; return 0; }
+  find "${dir}" -maxdepth 1 -type f -printf '.' 2>/dev/null | wc -c | tr -d ' '
+}
+
+count_modules_in_phases() {
+  local total=0
+  local phase dir
+  for phase in "$@"; do
+    dir="$(module_dir_for_phase "${phase}")"
+    total=$(( total + $(count_modules_in_dir "${dir}") ))
+  done
+  echo "${total}"
+}
+
+load_modules() {
+  local -a phases=("$@")
+  local -a entries=()
+  local phase dir line f fbase
+
+  # Collect "basename<TAB>fullpath<TAB>phase"
+  for phase in "${phases[@]}"; do
+    dir="$(module_dir_for_phase "$phase")"
+    [[ -d "$dir" ]] || { log "No module dir: $dir (phase=$phase)"; continue; }
+    mapfile -t -O "${#entries[@]}" entries < <(
+      find "$dir" -maxdepth 1 -type f -printf '%f\t%p\t'"$phase"'\n' 2>/dev/null
+    )
+  done
+
+  ((${#entries[@]})) || { log "No modules found for phases: ${phases[*]}"; return 0; }
+
+  mapfile -t entries < <(printf '%s\n' "${entries[@]}" | sort)
+
+  while IFS=$'\t' read -r fbase f phase; do
+    [[ -f "$f" ]] || continue
+
+    FIRSTBOOT_CURRENT_MODULE_INDEX=$((FIRSTBOOT_CURRENT_MODULE_INDEX + 1))
+    FIRSTBOOT_CURRENT_MODULE_NAME="$fbase"
+
+    log "[START] $f (phase=$phase module_index=${FIRSTBOOT_CURRENT_MODULE_INDEX}/${FIRSTBOOT_TOTAL_MODULES})"
+    # shellcheck disable=SC1090
+    . "$f"
+    log "[STOP] $f"
+  done < <(printf '%s\n' "${entries[@]}")
+
+  FIRSTBOOT_CURRENT_MODULE_NAME="firstboot"
+}
+
+# Detect migrated or new
+if [[ -f "${FIRSTBOOT_MIGRATED_MARKER}" ]]; then
+  FIRSTBOOT_MIGRATED=1
+  PHASE="mig"
+else
+  FIRSTBOOT_MIGRATED=0
+  PHASE="new"
+fi
+
+log "Starting firstboot (migrated=${FIRSTBOOT_MIGRATED})"
+
+# Pre-calc module count
+FIRSTBOOT_TOTAL_MODULES="$(count_modules_in_phases common "${PHASE}")"
+
+# Run modules from both phases
+load_modules common "${PHASE}"
+
+rm -f "${HOME}/.config/autostart/firstboot.desktop"
+
+log "Firstboot finished successfully"
+exit 0

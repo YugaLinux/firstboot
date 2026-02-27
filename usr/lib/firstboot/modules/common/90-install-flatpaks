@@ -1,0 +1,60 @@
+install_repo() {
+  waitforNet
+  log "Adding Flathub repo (user)"
+
+  if ! /usr/bin/flatpak remote-add --user --if-not-exists flathub /usr/share/firstboot/flathub.flatpakrepo; then
+    die "Adding Flathub Repo Failed"
+  fi
+
+  log "Flathub repo present"
+}
+
+install_flatpak_package() {
+  local appid="$1"
+  log "Installing flatpak: ${appid}"
+  if ! /usr/bin/flatpak install --user --noninteractive flathub "${appid}"; then
+    die "Installing ${appid} Failed"
+  fi
+  log "Installed flatpak: ${appid}"
+}
+
+# If the selection module didn't run, pkgs may not exist at all.
+if ! declare -p pkgs >/dev/null 2>&1; then
+  log "No flatpak selection available (pkgs unset); skipping flatpak install"
+  exit 0
+fi
+
+waitforNet
+install_repo
+
+if (( ${#pkgs[@]} > 0 )); then
+  total="${#pkgs[@]}"
+  log "Installing ${total} flatpaks"
+
+  (
+    i=0
+    for app in "${pkgs[@]}"; do
+      i=$((i + 1))
+      if (( i == total )); then
+        pct=100
+      else
+        pct=$(( (i - 1) * 100 / total ))
+      fi
+
+      echo "${pct}"
+      echo "# Installing ${app} (${i}/${total})"
+      install_flatpak_package "${app}"
+    done
+
+    echo "100"
+    echo "# Done"
+  ) | zenity --progress \
+      --title="Installing Applications" \
+      --width=420 \
+      --auto-close \
+      --no-cancel
+
+  log "Flatpak installation progress dialog closed"
+else
+  log "No flatpaks selected"
+fi

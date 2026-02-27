@@ -1,0 +1,17 @@
+true	org.mozilla.firefox	Mozilla Firefox	Web browser
+true	org.kde.kcalc	KCalc	Calculator
+true	org.kde.kate	Kate	Advanced text editor
+false	org.kde.kwrite	KWrite	Simple text editor
+false	com.github.tchx84.Flatseal	Flatseal	Flatpak permissions manager
+false	org.kde.gwenview	Gwenview	Image viewer
+false	org.kde.krita	Krita	Digital painting
+false	org.kde.kdenlive	Kdenlive	Video editor
+false	io.github.celluloid_player.Celluloid	Celluloid	Video player
+false	org.videolan.VLC	VLC	Media player
+false	org.mozilla.Thunderbird	Thunderbird	Email client
+false	org.telegram.desktop	Telegram Desktop	Messaging client
+false	org.libreoffice.LibreOffice	LibreOffice	Office suite
+false	org.gimp.GIMP	GIMP	Image editor
+false	io.github.dvlv.boxbuddyrs	BoxBuddy	Distrobox container manager
+false	org.kde.kbackup	KBackup	Backup tool
+false	org.kde.skanlite	Skanlite	Document scanner

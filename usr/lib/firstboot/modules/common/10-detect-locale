@@ -1,0 +1,8 @@
+# Sets: need_locale (empty if not needed)
+if [[ "${LANG:-}" =~ ^en_ ]]; then
+  need_locale=""
+  log "LANG=${LANG:-unset}; no locale install needed"
+else
+  need_locale="${LANG:-}"
+  log "LANG=${LANG:-unset}; locale may be needed: need_locale='${need_locale}'"
+fi

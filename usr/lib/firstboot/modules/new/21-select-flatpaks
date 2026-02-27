@@ -1,0 +1,108 @@
+declare -g -a pkgs=()
+declare -g -a FIRSTBOOT_FLATPAK_IDS=()
+declare -g -a FIRSTBOOT_FLATPAK_NAMES=()
+declare -g -a FIRSTBOOT_FLATPAK_DESCS=()
+declare -g -a FIRSTBOOT_FLATPAK_DEFAULTS=()
+
+defaultOptions() {
+  if (( ${#pkgs[@]} == 0 )); then
+    pkgs=("org.mozilla.firefox")
+    log "flatpak defaults empty; using fallback defaults (${#pkgs[@]} apps)"
+  else
+    log "Using defaults from flatpak-list (${#pkgs[@]} apps)"
+  fi
+}
+
+load_flatpak_list() {
+  local cfgfile
+  if [[ -f /etc/firstboot/configs/flatpak-list ]]; then
+    cfgfile="/etc/firstboot/configs/flatpak-list"
+  else
+    cfgfile="/usr/lib/firstboot/configs/flatpak-list"
+  fi
+
+  FIRSTBOOT_FLATPAK_IDS=()
+  FIRSTBOOT_FLATPAK_NAMES=()
+  FIRSTBOOT_FLATPAK_DESCS=()
+  FIRSTBOOT_FLATPAK_DEFAULTS=()
+  pkgs=()
+
+  if [[ ! -f "${cfgfile}" ]]; then
+    log "No flatpak-list found (${cfgfile}); leaving pkgs empty"
+    return 0
+  fi
+
+  while IFS=$'\t' read -r def appid name desc; do
+    [[ -z "${def}${appid}${name}${desc}" ]] && continue
+    [[ "${def}" =~ ^# ]] && continue
+
+    FIRSTBOOT_FLATPAK_DEFAULTS+=("${def}")
+    FIRSTBOOT_FLATPAK_IDS+=("${appid}")
+    FIRSTBOOT_FLATPAK_NAMES+=("${name}")
+    FIRSTBOOT_FLATPAK_DESCS+=("${desc}")
+
+    case "${def}" in
+      true|TRUE|1|yes|YES|on|ON) pkgs+=("${appid}") ;;
+    esac
+  done < <(grep -v '^[[:space:]]*$' "${cfgfile}" | grep -v '^[[:space:]]*#' || true)
+
+  log "Loaded flatpak list from ${cfgfile} (defaults: ${#pkgs[@]} apps, total: ${#FIRSTBOOT_FLATPAK_IDS[@]} apps)"
+}
+
+customizeOptions() {
+  local args=()
+  local i def id name desc
+
+  if (( ${#FIRSTBOOT_FLATPAK_IDS[@]} == 0 )); then
+    log "No flatpak list available for customization; using defaults"
+    defaultOptions
+    return 0
+  fi
+
+  for ((i=0; i<${#FIRSTBOOT_FLATPAK_IDS[@]}; i++)); do
+    def="${FIRSTBOOT_FLATPAK_DEFAULTS[i]}"
+    id="${FIRSTBOOT_FLATPAK_IDS[i]}"
+    name="${FIRSTBOOT_FLATPAK_NAMES[i]}"
+    desc="${FIRSTBOOT_FLATPAK_DESCS[i]}"
+
+    case "${def}" in
+      true|TRUE|1|yes|YES|on|ON) def="TRUE" ;;
+      *) def="FALSE" ;;
+    esac
+
+    args+=("${def}" "${id}" "${name}" "${desc}")
+  done
+
+  selection="$(zenity --list --width=1000 --height=1025 \
+    --title="Choose software to install" \
+    --text="Select which software you would like to install\nMore software can be found in the <b>Software</b> App" \
+    --checklist \
+    --column="" --column="AppID" --column="Application" --column="Description" \
+    --hide-column=2 \
+    "${args[@]}")" || true
+
+  if [[ -z "${selection}" ]]; then
+    log "Customization cancelled or empty selection; using defaults"
+    defaultOptions
+  else
+    IFS='|' read -r -a pkgs <<< "${selection}"
+    log "Customized selection: ${#pkgs[@]} apps"
+  fi
+}
+
+load_flatpak_list
+
+zenity --question --icon=distributor-logo-steamos --no-wrap --title 'Welcome to Yuga Linux' \
+  --text 'Almost done, there is one last step\n\nWe need to download some applications to get you started\n\nYou can add more software later using the <b>Software</b> App' \
+  --width 300 --height 300 \
+  --ok-label OK \
+  --cancel-label Customise
+choice=$?
+
+if [[ "${choice}" -eq 0 ]]; then
+  log "User chose default software"
+  defaultOptions
+else
+  log "User chose to customize software"
+  customizeOptions
+fi

@@ -1,0 +1,5 @@
+if /usr/bin/gio set "${HOME}/Desktop/org.valve.gamescope.desktop" metadata::trusted true 2>/dev/null; then
+  log "Marked org.valve.gamescope.desktop as trusted"
+else
+  log "Could not mark org.valve.gamescope.desktop as trusted"
+fi
