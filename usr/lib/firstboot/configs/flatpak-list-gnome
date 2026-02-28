@@ -3,7 +3,6 @@ true	org.gnome.Calculator	Calculator	Basic Calculator
 true	org.gnome.TextEditor	Text Editor	Basic Text Editor
 false	com.mattjakeman.ExtensionManager	Extension Manager	Shell Extensions Manager
 false	com.github.tchx84.Flatseal	Flatseal	Application Permissions Manager
-false	com.valvesoftware.Steam	Steam	Steam Games Launcher
 false	org.gnome.Loupe	Image Viewer	Basic Image Viewer
 false	org.gnome.gThumb	gThumb	Advanced Image Viewer
 false	io.github.celluloid_player.Celluloid	Celluloid	Basic Video Player
