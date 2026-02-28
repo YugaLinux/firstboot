@@ -73,9 +73,9 @@ customizeOptions() {
     args+=("${def}" "${id}" "${name}" "${desc}")
   done
 
-  selection="$(zenity --list --width=1000 --height=1025 \
+  selection="$(d --list --width=1000 --height=1025 \
     --title="Choose software to install" \
-    --text="Select which software you would like to install\nMore software can be found in the <b>Software</b> App" \
+    --text="We recommend you install a few basic programs now.\nYou will always be able to install additional software later on\nusing the inbuilt software store." \
     --checklist \
     --column="" --column="AppID" --column="Application" --column="Description" \
     --hide-column=2 \
@@ -91,18 +91,4 @@ customizeOptions() {
 }
 
 load_flatpak_list
-
-zenity --question --icon=distributor-logo-steamos --no-wrap --title 'Welcome to Yuga Linux' \
-  --text 'Almost done, there is one last step\n\nWe need to download some applications to get you started\n\nYou can add more software later using the <b>Software</b> App' \
-  --width 300 --height 300 \
-  --ok-label OK \
-  --cancel-label Customise
-choice=$?
-
-if [[ "${choice}" -eq 0 ]]; then
-  log "User chose default software"
-  defaultOptions
-else
-  log "User chose to customize software"
-  customizeOptions
-fi
+customizeOptions

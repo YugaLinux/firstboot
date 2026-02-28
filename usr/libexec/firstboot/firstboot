@@ -25,15 +25,31 @@ log() {
   printf '%s [%s] %s\n' "${ts}" "${FIRSTBOOT_CURRENT_MODULE_NAME}" "$*" >> "${FIRSTBOOT_LOG_FILE}"
 }
 
-die() {
-  log "ERROR: $*"
-  zenity --error --no-wrap --text="$*"
-  exit 1
-}
-
 d() {
   zenity "$@"
 }
+
+die() {
+  log "ERROR: $*"
+  d --error --no-wrap --text="$*"
+  exit 1
+}
+
+on_error() {
+  local rc=$?
+  local line=${BASH_LINENO[0]:-?}
+  local cmd=${BASH_COMMAND:-?}
+  local mod=${FIRSTBOOT_CURRENT_MODULE_NAME:-firstboot}
+
+  log "ERROR trapped (rc=${rc}) in module=${mod} line=${line}: ${cmd}"
+  d --error --no-wrap \
+    --title "Firstboot failed" \
+    --text "Firstboot encountered an error.\n\nModule: ${mod}\nLine: ${line}\nCommand: ${cmd}\nExit code: ${rc}\n\nSee the log:\n${FIRSTBOOT_LOG_FILE}" || true
+
+  exit "${rc}"
+}
+
+trap on_error ERR
 
 waitforNet() {
   until /usr/bin/curl -s --max-time 5 1.1.1.1 > /dev/null; do

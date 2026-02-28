@@ -151,13 +151,13 @@ languages=(
   "zu_ZA.UTF-8" "Zulu" "(South Africa)"
 )
 
-# Build zenity radiolist rows: Select, Locale, Language, Region
+# Build radiolist rows: Select, Locale, Language, Region
 rows=()
 for ((i=0; i<${#languages[@]}; i+=3)); do
   rows+=("FALSE" "${languages[i]}" "${languages[i+1]}" "${languages[i+2]}")
 done
 
-selected_language="$(zenity --list --radiolist \
+selected_language="$(d --list --radiolist \
   --title "Select Language" \
   --width=700 --height=520 \
   --column "Select" --column "Locale" --column "Language" --column "Region" \

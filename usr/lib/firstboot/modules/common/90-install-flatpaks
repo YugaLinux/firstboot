@@ -21,7 +21,7 @@ install_flatpak_package() {
 # If the selection module didn't run, pkgs may not exist at all.
 if ! declare -p pkgs >/dev/null 2>&1; then
   log "No flatpak selection available (pkgs unset); skipping flatpak install"
-  exit 0
+  return 0
 fi
 
 waitforNet
@@ -48,7 +48,7 @@ if (( ${#pkgs[@]} > 0 )); then
 
     echo "100"
     echo "# Done"
-  ) | zenity --progress \
+  ) | d --progress \
       --title="Installing Applications" \
       --width=420 \
       --auto-close \

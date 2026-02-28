@@ -1,6 +1,6 @@
 OS_NAME="$(get_os_name)"
 
-zenity --info --icon=distributor-logo --no-wrap --title "Welcome to ${OS_NAME}" \
+d --info --icon=distributor-logo --no-wrap --title "Welcome to ${OS_NAME}" \
   --text "Almost done, there is one last step.\n\nWe'll run a few quick checks and finish setting things up.\n\nPlease click <b>OK</b> to continue." \
   --width 320 --height 240
 

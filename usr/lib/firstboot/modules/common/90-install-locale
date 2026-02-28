@@ -1,7 +1,7 @@
 # Skip if not requested
 if [[ -z "${need_locale:-}" ]]; then
   log "No locale requested; skipping locale install"
-  exit 0
+  return 0
 fi
 
 apply_kde_user_locale() {
@@ -85,7 +85,7 @@ waitforNet
   esac
 
   echo "# Done"
-) | zenity --progress \
+) | d --progress \
     --title="Language Setup" \
     --width=420 \
     --pulsate \
