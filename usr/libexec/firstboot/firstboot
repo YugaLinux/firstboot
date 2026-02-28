@@ -66,7 +66,24 @@ get_os_name() {
     name="${NAME:-}"
     [[ -n "$name" ]] && break
   done
-  echo "${name:-your system}"
+  OS_NAME="${name:-your system}"
+  log "Detected OS name: $OS_NAME"
+}
+
+detect_wayland_compositor() {
+    # Return values: kwin | mutter | unknown
+    if pgrep -x kwin_wayland >/dev/null 2>&1 || pgrep -x kwin_wayland_wrapper >/dev/null 2>&1; then
+        log "kwin detected"
+        echo "kwin"
+        return 0
+    fi
+    if pgrep -x gnome-shell >/dev/null 2>&1 || pgrep -x mutter >/dev/null 2>&1; then
+        log "mutter detected"
+        echo "mutter"
+        return 0
+    fi
+    log "no known compositor detected"
+    echo "unknown"
 }
 
 module_dir_for_phase() {

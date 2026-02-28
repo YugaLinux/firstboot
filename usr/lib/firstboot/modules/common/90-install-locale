@@ -90,4 +90,4 @@ waitforNet
     --width=420 \
     --pulsate \
     --no-cancel \
-    --auto-close || true
+    --auto-close

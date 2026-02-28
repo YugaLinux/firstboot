@@ -159,6 +159,7 @@ done
 
 selected_language="$(d --list --radiolist \
   --title "Select Language" \
+  --text="Please select the language you would like to use\nand we will install the language support packages for you." \
   --width=700 --height=520 \
   --column "Select" --column "Locale" --column "Language" --column "Region" \
   "${rows[@]}")" || true

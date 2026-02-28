@@ -31,28 +31,26 @@ if (( ${#pkgs[@]} > 0 )); then
   total="${#pkgs[@]}"
   log "Installing ${total} flatpaks"
 
-  (
-    i=0
-    for app in "${pkgs[@]}"; do
-      i=$((i + 1))
-      if (( i == total )); then
-        pct=100
-      else
-        pct=$(( (i - 1) * 100 / total ))
-      fi
+(
+  i=0
+  for app in "${pkgs[@]}"; do
+    # i = number completed so far (before this install)
+    pct=$(( i * 100 / total ))
 
-      echo "${pct}"
-      echo "# Installing ${app} (${i}/${total})"
-      install_flatpak_package "${app}"
-    done
+    echo "${pct}"
+    echo "# Installing ${app} ($((i + 1))/${total})"
 
-    echo "100"
-    echo "# Done"
-  ) | d --progress \
-      --title="Installing Applications" \
-      --width=420 \
-      --auto-close \
-      --no-cancel || true
+    install_flatpak_package "${app}"
+    i=$((i + 1))
+  done
+
+  echo "# Done"
+  echo "100"
+) | d --progress \
+    --title="Installing Applications" \
+    --width=420 \
+    --auto-close \
+    --no-cancel
 
   log "Flatpak installation progress dialog closed"
 else
