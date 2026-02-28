@@ -63,7 +63,7 @@ get_os_name() {
     [[ -r "$f" ]] || continue
     # shellcheck disable=SC1090
     . "$f"
-    name="${NAME:-}"
+    name="${PRETTY_NAME:-}"
     [[ -n "$name" ]] && break
   done
   OS_NAME="${name:-your system}"

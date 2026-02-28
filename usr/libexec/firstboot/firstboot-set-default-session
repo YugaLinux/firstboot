@@ -1,0 +1,32 @@
+#!/usr/bin/bash
+set -Eeuo pipefail
+
+SESSION="${1:-}"
+WAYLAND_DIR="/usr/share/wayland-sessions"
+SYSCONF="/etc/gamescope-session-steam/system.conf"
+
+die() {
+  printf 'ERROR: %s\n' "$*" >&2
+  exit 1
+}
+
+[[ -n "${SESSION}" ]] || die "Usage: $0 <session-name>"
+
+# Validate that a matching .desktop exists
+if [[ ! -f "${WAYLAND_DIR}/${SESSION}.desktop" ]]; then
+  die "Session '${SESSION}' not found: ${WAYLAND_DIR}/${SESSION}.desktop"
+fi
+
+# Ensure directory exists
+/usr/bin/mkdir -p "$(dirname "${SYSCONF}")"
+
+# Write/update DEFAULT_SESSION
+if [ -f "$SYSCONF" ]; then
+  if grep -q '^DEFAULT_SESSION=' "$SYSCONF"; then
+    /usr/bin/sed -i "s|^DEFAULT_SESSION=.*|DEFAULT_SESSION=\"${SESSION}\"|g" "$SYSCONF"
+  else
+    /usr/bin/printf '\nDEFAULT_SESSION="%s"\n' "$SESSION" >> "$SYSCONF"
+  fi
+else
+  /usr/bin/printf 'DEFAULT_SESSION="%s"\n' "$SESSION" >> "$SYSCONF"
+fi

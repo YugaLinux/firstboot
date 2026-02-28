@@ -1,0 +1,52 @@
+WAYLAND_DIR="/usr/share/wayland-sessions"
+
+# Determine which DE session is available/preferred
+de_session=""
+de_label="Desktop Session"
+CURRENT_USER="${USER:-$(id -un 2>/dev/null)}"
+
+if [[ -f "${WAYLAND_DIR}/gnome-wayland.desktop" ]]; then
+  de_session="gnome-wayland"
+elif [[ -f "${WAYLAND_DIR}/plasmawayland.desktop" ]]; then
+  de_session="plasmawayland"
+fi
+
+# Build radiolist options: (Select, SessionName, Label)
+rows=(
+  "TRUE"  "gamescope-session-steam" "Steam Game Mode"
+)
+
+if [[ -n "${de_session}" ]]; then
+  rows+=("FALSE" "${de_session}" "${de_label}")
+fi
+
+# If no DE session exists, nothing to choose besides gamescope
+if [[ -z "${de_session}" ]]; then
+  log "No gnome-wayland.desktop or plasmawayland.desktop found; using gamescope-session-steam"
+  if ! /usr/libexec/firstboot/set-default-session "gamescope-session-steam"; then
+    die "Failed to set default session"
+  fi
+  exit 0
+fi
+
+# Ask user
+selected="$(
+  d --list --radiolist \
+    --title "Select autologin session" \
+    --text "Choose which session you want to automatically boot into on system startup." \
+    --width 520 --height 260 \
+    --column "Select" --column "Session" --column "Description" \
+    "${rows[@]}"
+)"
+
+if [[ -z "${selected}" ]]; then
+  # User closed dialog; keep it safe and default to gamescope
+  selected="gamescope-session-steam"
+  log "Default session selection dismissed; using ${selected}"
+else
+  log "Default session selected: ${selected}"
+fi
+
+if ! pkexec /usr/libexec/firstboot/firstboot-set-default-session "${selected}"; then
+  die "Failed to set default session"
+fi

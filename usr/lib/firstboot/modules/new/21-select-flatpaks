@@ -75,7 +75,7 @@ customizeOptions() {
 
   selection="$(d --list --width=1000 --height=1025 \
     --title="Choose software to install" \
-    --text="We recommend you install a few basic programs now.\nYou will always be able to install additional software later on\nusing the inbuilt software store." \
+    --text="We recommend you install a few basic programs now.\nYou will always be able to install additional software later on using the inbuilt software store." \
     --checklist \
     --column="" --column="AppID" --column="Application" --column="Description" \
     --hide-column=2 \
