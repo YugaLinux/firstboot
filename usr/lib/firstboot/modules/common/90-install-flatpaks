@@ -52,7 +52,7 @@ if (( ${#pkgs[@]} > 0 )); then
       --title="Installing Applications" \
       --width=420 \
       --auto-close \
-      --no-cancel
+      --no-cancel || true
 
   log "Flatpak installation progress dialog closed"
 else
